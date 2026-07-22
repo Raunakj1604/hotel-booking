@@ -1,10 +1,35 @@
 import React, { useState } from 'react'
 import Title from '../../components/Title'
-import { assets, dashboardDummyData } from '../../assets/assets'
+import { assets } from '../../assets/assets'
+import { useAppContext } from '../../context/AppContext'
+import axios from 'axios'
 
 const Dashboard = () => {
 
-  const [dashboardData, setDashboardData] = useState(dashboardDummyData)
+  const{user, getToken,toast, currency} = useAppContext();
+
+  const [dashboardData, setDashboardData] = useState({
+    bookings : [],
+    totalBookings : 0,
+    totalRevenue : 0,
+  })
+
+  const fetchDashboardData = async () =>{
+    try {
+      const {data} = await axios.get('/api/bookings/hotel',{headers : {Authorization : `Bearer ${await getToken()}`}})
+      if(data.success){
+        setDashboardData(data.dashboardData)
+      }
+    } catch (error) {
+      console.error("Error fetching dashboard data:", error.message);
+    }
+  };
+
+  React.useEffect(() => {
+    if (user) {
+      fetchDashboardData();
+    }
+  }, [user]);
 
   return (
     <div>
@@ -50,7 +75,7 @@ const Dashboard = () => {
             </p>
 
             <p className='text-neutral-400 text-base'>
-              {dashboardData.totalRevenue}
+              {currency}{dashboardData.totalRevenue}
             </p>
           </div>
         </div>
@@ -94,7 +119,7 @@ const Dashboard = () => {
               </td>
 
               <td className='py-3 px-4 text-gray-700 border-t border-gray-300 text-center'>
-                ${item.totalPrice}
+                {currency}{item.totalPrice}
               </td>
 
               <td className='py-3 px-4 border-t border-gray-300 flex'>

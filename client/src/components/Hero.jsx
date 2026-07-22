@@ -1,20 +1,44 @@
-import React from 'react'
+import React, { useState } from 'react'
 import {assets,cities} from '../assets/assets.js';
+import axios from 'axios';
+import { useAppContext } from '../context/AppContext.jsx';
 
 const Hero = () => {
+
+    const {navigate ,getToken,setSearchedCities} = useAppContext()
+    const[destination, setdestination] = useState("")
+
+    const onSearch = async(e) => {
+        e.preventDefault();
+        navigate(`/rooms?destination=${destination} `)
+
+        //call api to save recent searched city
+        await axios.post('/api/user/store-recent-search',{recentSearchCity : destination}, {headers : {Authorization: `Bearer ${await getToken()}`}});
+
+        //add destination to searchedCities max 3 recent searched cities
+
+        setSearchedCities((prevSearchedCities)=>{
+            const updatedSearchedCities = [...prevSearchedCities,destination];
+            if(updatedSearchedCities.length>3){
+                updatedSearchedCities.shift();
+            }
+            return updatedSearchedCities;
+        })
+    }
   return (
     <div className='flex flex-col items-start justify-center px-6 md:px-16 lg:px-24 xl:px-32 text-white bg-[url("src/assets/heroImage.png")] bg-no-repeat bg-cover bg-center h-screen '>
       <p className='bg-[#49B9FF]/50 px-3.5 py-1 rounded-full mt-20'>The Best Hotel Experience</p>
       <h1 className='font-playfair text-2xl md:text-5xl md:text-[56px]           md:leading-14 font-bold md:font-extrabold max-w-xl mt-4 '>Discover Your Perfect Gateaway Destination</h1>
       <p className='mt-2 max-w-130 text-sm md:text-base'>Unparralled comfort and luxury awaits you at worlds most exclusive hotels and resorts, start your journey today!</p>
-      <form className='bg-white text-gray-500 rounded-lg px-6 py-4 mt-8  flex flex-col md:flex-row max-md:items-start gap-4 max-md:mx-auto'>
+      <form onSubmit={onSearch} className='bg-white text-gray-500 rounded-lg px-6 py-4 mt-8  flex flex-col md:flex-row max-md:items-start gap-4 max-md:mx-auto'>
 
             <div>
                 <div className='flex items-center gap-2'>
                     <img src={assets.calenderIcon} alt="Destination" className='h-4' />
                     <label htmlFor="calenderInput">Destination</label>
                 </div>
-                <input list='destinations' id="destinationInput" type="text" className=" rounded border border-gray-200 px-3 py-1.5 mt-1.5 text-sm outline-none" placeholder="Type here" required />
+                <input onChange={e=> setdestination(e.target.value)} 
+                value ={destination} list='destinations' id="destinationInput" type="text" className=" rounded border border-gray-200 px-3 py-1.5 mt-1.5 text-sm outline-none" placeholder="Type here" required />
                 <datalist id="destinations">
                    {
                    
